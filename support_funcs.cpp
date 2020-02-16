@@ -252,7 +252,7 @@ __global__ void Find_Calculation_limits_Horizontal( Argument_Pointers *arg, Cons
 	int start = 2;
 	int end = 0;
 	int offset = M + 3;
-	if (i == (N-1)
+	if (i == (N-1))
 		Interpolate_FS_ng(N - 1, N - 1, -1, arg, coeffs);
 	if (i == 2)
 		Interpolate_FS_ng(2, 2, 1, arg, coeffs);
