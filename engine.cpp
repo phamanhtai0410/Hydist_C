@@ -10,13 +10,13 @@
 using namespace std;
 
 
-void synch_and_check(){
-	cudaDeviceSynchronize();
-	cudaError_t err = cudaGetLastError();
-	if (err != cudaSuccess)
-		cout << "error: " <<  cudaGetErrorString(err) << endl;
-    assert(err == cudaSuccess);
-}
+// void synch_and_check(){
+// 	cudaDeviceSynchronize();
+// 	cudaError_t err = cudaGetLastError();
+// 	if (err != cudaSuccess)
+// 		cout << "error: " <<  cudaGetErrorString(err) << endl;
+//     assert(err == cudaSuccess);
+// }
 
 
 void update_boundary_at_t(int M, int N, float t, bool channel, int total_time, Argument_Pointers* d_arg_ptr, Constant_Coeffs* coeffs)
@@ -132,10 +132,23 @@ void Hydraulic_Calculation(DOUBLE dT, DOUBLE NANGDAY, Argument_Pointers* d_arg_p
         update_uvz <<<grid_2d, block_2d>>> (d_arg_ptr, coeffs);
         synch_and_check();
    
-        grid = dim3(1, N, 1);
-        Find_Calculation_limits_Horizontal <<<grid, 32>>> (d_arg_ptr, coeffs);
-        grid = dim3(1, M, 1);
-        Find_Calculation_limits_Vertical <<<grid, 32>>>(d_arg_ptr, coeffs);
+        //grid = dim3(1, N, 1);synch_and_check();
+        // Find_Calculation_limits_Horizontal <<<grid, 32>>> (d_arg_ptr, coeffs);synch_and_check();
+        dim3 blockDim, gridDim;
+        blockDim = dim3(32, 1, 1);
+        gridDim = dim3(
+            (1/blockDim.x + ((1%blockDim.x)?1:0)),
+            (N/blockDim.y + ((N%blockDim.y)?1:0)), 1 
+        );
+        Find_Calculation_limits_Horizontal <<<gridDim, blockDim>>> (d_arg_ptr, coeffs);synch_and_check();
+        // grid = dim3(1, M, 1);synch_and_check();
+        // Find_Calculation_limits_Vertical <<<grid, 32>>>(d_arg_ptr, coeffs);synch_and_check();
+        blockDim = dim3(32, 1, 1);
+        gridDim = dim3(
+            (1/blockDim.x + ((1%blockDim.x)?1:0)),
+            (M/blockDim.y + ((M%blockDim.y)?1:0)), 1 
+        );
+        Find_Calculation_limits_Vertical <<<gridDim, blockDim>>>(d_arg_ptr, coeffs);synch_and_check();
         Htuongdoi <<<grid_2d, block_2d>>> (d_arg_ptr);
         synch_and_check();
 
